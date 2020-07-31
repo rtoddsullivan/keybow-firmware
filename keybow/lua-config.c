@@ -52,6 +52,15 @@ void sendMIDINote(int channel, int note, int velocity, int state) {
     write(midi_output, buf, 3);
 }
 
+void sendMIDICC(int channel, int note, int velocity) {
+    unsigned char buf[3];
+    buf[0] = 0x0B;
+    buf[0] |= channel & 0xf;
+    buf[1] = note & 0x7f;
+    buf[2] = velocity & 0x7f;
+    write(midi_output, buf, 3);
+}
+
 void sendHIDReport(){
     int x;
     unsigned char buf[16];
@@ -212,6 +221,16 @@ static int l_send_midi_note(lua_State *L) {
     unsigned short state = lua_toboolean(L, 4);
     lua_pop(L, nargs);
     sendMIDINote(channel, note, velocity, state);
+    return 0;
+}
+static int l_send_midi_cc(lua_State *L) {
+    int nargs = lua_gettop(L);
+    unsigned short channel = luaL_checknumber(L, 1);
+    unsigned short note = luaL_checknumber(L, 2);
+    unsigned short velocity = luaL_checknumber(L, 3);
+    unsigned short state = lua_toboolean(L, 4);
+    lua_pop(L, nargs);
+    sendMIDICC(channel, note, velocity);
     return 0;
 }
 
@@ -467,6 +486,9 @@ int initLUA() {
 
     lua_pushcfunction(L, l_send_midi_note);
     lua_setglobal(L, "keybow_send_midi_note");
+
+    lua_pushcfunction(L, l_send_midi_cc);
+    lua_setglobal(L, "keybow_send_midi_cc");
 
     lua_pushcfunction(L, l_get_millis);
     lua_setglobal(L, "keybow_get_millis");
